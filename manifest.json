@@ -5,5 +5,16 @@
   "display": "standalone",
   "background_color": "#3b82f6",
   "theme_color": "#3b82f6",
-  "icons": []
+  "icons": [
+    {
+      "src": "https://img.icons8.com/fluency/512/partly-cloudy-day.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/fluency/192/partly-cloudy-day.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
 }
