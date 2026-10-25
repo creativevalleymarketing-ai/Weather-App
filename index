@@ -6,7 +6,7 @@
     <title>Weather App - မိုးလေဝသ အခြေအနေပြ အပလီကေးရှင်း</title>
     
     <!-- PWA Manifest Link -->
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIldlYXRoZXIgQXBwIiwKICAic2hvcnRfbmFtZSI6ICJXZWF0aGVyIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMzYjgyZjYiLAogICJ0aGVtZV9jb2xvciI6ICIjM2I4MmY2IiwKICAiaWNvbnMiOiBbX<strong></strong>n0=">
+    <link rel="manifest" href="manifest.json">
 
     <!-- Tailwind CSS for UI Styling -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -125,7 +125,7 @@
         // Register Service Worker for PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgKGV2ZW50KSA9PiB7CiAgICBldmVudC53YWl0VW50aWwoc2VsZi5za3lwLm9wZW4oJ3dlYXRoZXItY2FjaGUtXYAnKSk7Cn0pOw==')
+                navigator.serviceWorker.register('sw.js')
                 .catch(err => console.log('SW registration failed: ', err));
             });
         }
