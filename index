@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App - မိုးလေဝသ အခြေအနေပြ အပလီကေးရှင်း</title>
+    
+    <!-- PWA Manifest Link -->
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIldlYXRoZXIgQXBwIiwKICAic2hvcnRfbmFtZSI6ICJXZWF0aGVyIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMzYjgyZjYiLAogICJ0aGVtZV9jb2xvciI6ICIjM2I4MmY2IiwKICAiaWNvbnMiOiBbX<strong></strong>n0=">
+
+    <!-- Tailwind CSS for UI Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Padauk', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+        }
+    </style>
+</head>
+<body id="bg-body" class="min-h-screen bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 text-white flex items-center justify-center p-4 sm:p-6 transition-all duration-700">
+
+    <div class="w-full max-w-md glass-panel rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <!-- Background Decorative Glows -->
+        <div class="absolute -top-20 -left-20 w-40 h-40 bg-pink-400 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+        <div class="absolute -bottom-20 -right-20 w-40 h-40 bg-yellow-300 rounded-full blur-3xl opacity-30 pointer-events-none"></div>
+
+        <!-- Header & Search -->
+        <div class="relative z-10">
+            <h1 class="text-2xl font-bold tracking-tight mb-4 text-center drop-shadow">မိုးလေဝသ သတင်းလွှာ</h1>
+            
+            <form id="search-form" class="flex items-center gap-2 mb-4" onsubmit="handleSearch(event)">
+                <div class="relative w-full">
+                    <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/70"></i>
+                    <input type="text" id="city-input" placeholder="မြို့အမည် ရိုက်ပါ (ဥပမာ Yangon)" 
+                        class="w-full bg-white/20 border border-white/30 rounded-2xl py-2.5 pl-10 pr-4 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm backdrop-blur-md transition-all">
+                </div>
+                <button type="submit" class="bg-white/30 hover:bg-white/40 border border-white/30 p-2.5 rounded-2xl transition-all flex items-center justify-center active:scale-95">
+                    <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                </button>
+            </form>
+
+            <!-- Quick City Select Buttons -->
+            <div class="flex flex-wrap gap-1.5 mb-6 justify-center">
+                <button onclick="fetchWeather('Yangon')" class="bg-white/10 hover:bg-white/25 border border-white/20 text-xs px-3 py-1 rounded-full backdrop-blur-sm transition">ရန်ကုန်</button>
+                <button onclick="fetchWeather('Mandalay')" class="bg-white/10 hover:bg-white/25 border border-white/20 text-xs px-3 py-1 rounded-full backdrop-blur-sm transition">မန္တလေး</button>
+                <button onclick="fetchWeather('Naypyidaw')" class="bg-white/10 hover:bg-white/25 border border-white/20 text-xs px-3 py-1 rounded-full backdrop-blur-sm transition">နေပြည်တော်</button>
+                <button onclick="fetchWeather('Tokyo')" class="bg-white/10 hover:bg-white/25 border border-white/20 text-xs px-3 py-1 rounded-full backdrop-blur-sm transition">တိုကျို</button>
+                <button onclick="fetchWeather('London')" class="bg-white/10 hover:bg-white/25 border border-white/20 text-xs px-3 py-1 rounded-full backdrop-blur-sm transition">လန်ဒန်</button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loading" class="hidden text-center py-10">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-white border-t-transparent"></div>
+                <p class="text-sm mt-3 text-white/80">ဒေတာများကို ရယူနေပါသည်။...</p>
+            </div>
+
+            <!-- Error Display -->
+            <div id="error" class="hidden text-center py-6 bg-red-500/20 border border-red-400/30 rounded-2xl backdrop-blur-md mb-4">
+                <p id="error-msg" class="text-sm text-red-100"></p>
+            </div>
+
+            <!-- Main Weather Display -->
+            <div id="weather-data" class="transition-opacity duration-300">
+                <!-- Location & Time -->
+                <div class="text-center mb-6">
+                    <h2 id="city-name" class="text-3xl font-extrabold tracking-wide drop-shadow-md">-</h2>
+                    <p id="date-time" class="text-xs text-white/80 mt-1">-</p>
+                </div>
+
+                <!-- Current Temp & Icon -->
+                <div class="flex flex-col items-center justify-center mb-6">
+                    <div id="weather-icon-container" class="mb-2 transition-transform hover:scale-110">
+                        <i data-lucide="sun" class="w-20 h-20 text-yellow-300 drop-shadow-lg"></i>
+                    </div>
+                    <div id="temperature" class="text-6xl font-black tracking-tighter drop-shadow-md">--°</div>
+                    <div id="condition-text" class="text-lg font-semibold text-white/90 mt-1">-</div>
+                </div>
+
+                <!-- Metrics Grid (Humidity, Wind, UV) -->
+                <div class="grid grid-cols-3 gap-3 mb-6">
+                    <div class="glass-card p-3 rounded-2xl text-center">
+                        <i data-lucide="droplets" class="w-5 h-5 mx-auto mb-1 text-cyan-200"></i>
+                        <span class="text-[10px] text-white/70 block uppercase">စိုထိုင်းဆ</span>
+                        <span id="humidity" class="text-sm font-bold">--%</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl text-center">
+                        <i data-lucide="wind" class="w-5 h-5 mx-auto mb-1 text-teal-200"></i>
+                        <span class="text-[10px] text-white/70 block uppercase">လေအရှိန်</span>
+                        <span id="wind" class="text-sm font-bold">-- km/h</span>
+                    </div>
+                    <div class="glass-card p-3 rounded-2xl text-center">
+                        <i data-lucide="sun-medium" class="w-5 h-5 mx-auto mb-1 text-amber-200"></i>
+                        <span class="text-[10px] text-white/70 block uppercase">UV အညွှန်း</span>
+                        <span id="uv-index" class="text-sm font-bold">--</span>
+                    </div>
+                </div>
+
+                <!-- 5-Day Forecast -->
+                <div>
+                    <h3 class="text-xs font-semibold uppercase tracking-wider text-white/80 mb-3 px-1">ရှေ့လာမည့် ၅ ရက် ခန့်မှန်းချက်</h3>
+                    <div id="forecast-container" class="space-y-2">
+                        <!-- Dynamic Forecast Items -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgKGV2ZW50KSA9PiB7CiAgICBldmVudC53YWl0VW50aWwoc2VsZi5za3lwLm9wZW4oJ3dlYXRoZXItY2FjaGUtXYAnKSk7Cn0pOw==')
+                .catch(err => console.log('SW registration failed: ', err));
+            });
+        }
+
+        const weatherMap = {
+            0: { desc: "သာယာသော မိုးကောင်းကင်", icon: "sun", bg: "from-amber-400 via-orange-500 to-sky-600" },
+            1: { desc: "အများအားဖြင့် သာယာသည်", icon: "sun-medium", bg: "from-blue-400 via-indigo-500 to-sky-600" },
+            2: { desc: "တိမ်အနည်းငယ် ရှိသည်", icon: "cloud-sun", bg: "from-sky-500 via-indigo-600 to-slate-700" },
+            3: { desc: "တိမ်ထူထပ်နေသည်", icon: "cloud", bg: "from-slate-500 via-gray-600 to-slate-800" },
+            45: { desc: "မြူဆိုင်းနေသည်", icon: "cloud-fog", bg: "from-slate-400 via-slate-600 to-gray-800" },
+            48: { desc: "နှင်းမြူများ ဖုံးလွှမ်းနေသည်", icon: "cloud-fog", bg: "from-slate-400 via-slate-600 to-gray-800" },
+            51: { desc: "မိုးဖွဲဖွဲ ရွာနေသည်", icon: "cloud-drizzle", bg: "from-blue-600 via-slate-700 to-gray-900" },
+            61: { desc: "မိုးအနည်းငယ် ရွာနေသည်", icon: "cloud-rain", bg: "from-blue-700 via-indigo-800 to-slate-900" },
+            63: { desc: "မိုးသည်းထန်စွာ ရွာနေသည်", icon: "cloud-rain-wind", bg: "from-blue-800 via-slate-800 to-gray-950" },
+            80: { desc: "မိုးသက်လေပြင်း ကျနေသည်", icon: "cloud-lightning", bg: "from-indigo-900 via-purple-900 to-slate-950" },
+            95: { desc: "မိုးကြိုးပစ်၍ မိုးရွာနေသည်", icon: "cloud-lightning", bg: "from-purple-900 via-slate-900 to-gray-950" }
+        };
+
+        const dayNamesMM = ["တနင်္ဂနွေ", "တနင်္လာ", "အင်္ဂါ", "ဗုဒ္ဓဟူး", "ကြာသပတေး", "သောကြာ", "စနေ"];
+
+        function handleSearch(e) {
+            e.preventDefault();
+            const city = document.getElementById('city-input').value.trim();
+            if (city) fetchWeather(city);
+        }
+
+        async function fetchWeather(city) {
+            showLoading();
+            try {
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+                const geoData = await geoRes.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    showError("မြို့အမည် မတွေ့ရှိပါ၊ ကျေးဇူးပြု၍ စာလုံးပေါင်း ပြန်စစ်ပါ။");
+                    return;
+                }
+
+                const { latitude, longitude, name, country } = geoData.results[0];
+
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,uv_index_max&timezone=auto`);
+                const weatherData = await weatherRes.json();
+
+                renderWeather(name, country, weatherData);
+            } catch (err) {
+                console.error(err);
+                showError("အင်တာနက် ချိတ်ဆက်မှု သို့မဟုတ် ဒေတာ ရယူရာတွင် အမှားအယွင်း ရှိနေပါသည်။");
+            }
+        }
+
+        function renderWeather(city, country, data) {
+            const current = data.current;
+            const daily = data.daily;
+            const info = weatherMap[current.weather_code] || { desc: "ရာသီဥတု ပုံမှန်", icon: "sun", bg: "from-blue-500 via-indigo-600 to-purple-700" };
+
+            document.getElementById('bg-body').className = `min-h-screen bg-gradient-to-br ${info.bg} text-white flex items-center justify-center p-4 sm:p-6 transition-all duration-700`;
+
+            document.getElementById('city-name').innerText = `${city}, ${country || ''}`;
+            document.getElementById('date-time').innerText = new Date().toLocaleDateString('my-MM', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('temperature').innerText = `${Math.round(current.temperature_2m)}°C`;
+            document.getElementById('condition-text').innerText = info.desc;
+            document.getElementById('humidity').innerText = `${current.relative_humidity_2m}%`;
+            document.getElementById('wind').innerText = `${Math.round(current.wind_speed_10m)} km/h`;
+            document.getElementById('uv-index').innerText = daily.uv_index_max[0] || 'N/A';
+
+            document.getElementById('weather-icon-container').innerHTML = `<i data-lucide="${info.icon}" class="w-20 h-20 text-yellow-300 drop-shadow-lg"></i>`;
+
+            const forecastContainer = document.getElementById('forecast-container');
+            forecastContainer.innerHTML = '';
+
+            for (let i = 1; i <= 5; i++) {
+                const dateObj = new Date(daily.time[i]);
+                const dayName = dayNamesMM[dateObj.getDay()];
+                const code = daily.weather_code[i];
+                const dayInfo = weatherMap[code] || { icon: "sun" };
+                const maxTemp = Math.round(daily.temperature_2m_max[i]);
+                const minTemp = Math.round(daily.temperature_2m_min[i]);
+
+                const itemHtml = `
+                    <div class="glass-card px-4 py-2.5 rounded-2xl flex items-center justify-between text-xs">
+                        <span class="w-20 font-semibold">${dayName}</span>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="${dayInfo.icon}" class="w-4 h-4 text-yellow-300"></i>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold">${maxTemp}°C</span>
+                            <span class="text-white/60 ml-1 font-normal">${minTemp}°C</span>
+                        </div>
+                    </div>
+                `;
+                forecastContainer.insertAdjacentHTML('beforeend', itemHtml);
+            }
+
+            lucide.createIcons();
+            showData();
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('weather-data').classList.add('opacity-30', 'pointer-events-none');
+        }
+
+        function showError(msg) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-msg').innerText = msg;
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('weather-data').classList.add('opacity-30', 'pointer-events-none');
+        }
+
+        function showData() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+            document.getElementById('weather-data').classList.remove('opacity-30', 'pointer-events-none');
+        }
+
+        fetchWeather('Yangon');
+    </script>
+</body>
+</html>
